@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor PDF para XML</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .upload-subtext {
+            color: #999;
+            font-size: 13px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-input {
+            cursor: pointer;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f2ff;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-name {
+            color: #333;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .convert-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .convert-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .convert-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .clear-btn {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .clear-btn:hover {
+            background: #d0d0d0;
+        }
+
+        .progress {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress.show {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            animation: progress 1.5s infinite;
+        }
+
+        @keyframes progress {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .result {
+            margin-top: 20px;
+            display: none;
+            padding: 15px;
+            background: #f0f9ff;
+            border-left: 4px solid #667eea;
+            border-radius: 6px;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result.error {
+            background: #fff0f0;
+            border-left-color: #ff4444;
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .result.success .result-title {
+            color: #2d7f3d;
+        }
+
+        .result.error .result-title {
+            color: #d32f2f;
+        }
+
+        .result-content {
+            font-size: 13px;
+            color: #555;
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .download-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .download-btn:hover {
+            background: #764ba2;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #1565c0;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .upload-area {
+                padding: 25px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 Conversor PDF para XML</h1>
+        <p class="subtitle">Converta seus arquivos PDF em formato XML facilmente</p>
+
+        <div class="upload-area file-input" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Clique ou arraste um PDF aqui</div>
+            <div class="upload-subtext">Arquivo máximo: 50MB</div>
+            <input type="file" id="fileInput" accept=".pdf" />
+        </div>
+
+        <div class="file-info" id="fileInfo">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-size" id="fileSize"></div>
+        </div>
+
+        <div class="buttons">
+            <button class="convert-btn" id="convertBtn" disabled>Converter para XML</button>
+            <button class="clear-btn" id="clearBtn">Limpar</button>
+        </div>
+
+        <div class="progress" id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="result" id="result">
+            <div class="result-title" id="resultTitle"></div>
+            <div class="result-content" id="resultContent"></div>
+            <a href="#" class="download-btn" id="downloadBtn" style="display: none;">⬇️ Baixar XML</a>
+        </div>
+
+        <div class="info-box">
+            💡 <strong>Como funciona:</strong> Faça upload de um arquivo PDF e ele será convertido em XML extraindo o texto e a estrutura do documento.
+        </div>
+    </div>
+
+    <script>
+        // Configurar PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const convertBtn = document.getElementById('convertBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const progress = document.getElementById('progress');
+        const result = document.getElementById('result');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultContent = document.getElementById('resultContent');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        let selectedFile = null;
+
+        // Upload área click
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'application/pdf') {
+                handleFile(file);
+            } else {
+                alert('Por favor, selecione um arquivo PDF válido.');
+            }
+        });
+
+        function handleFile(file) {
+            if (file.type !== 'application/pdf') {
+                alert('Por favor, selecione um arquivo PDF válido.');
+                return;
+            }
+
+            if (file.size > 50 * 1024 * 1024) {
+                alert('O arquivo é muito grande (máximo 50MB).');
+                return;
+            }
+
+            selectedFile = file;
+            fileName.textContent = `Arquivo: ${file.name}`;
+            fileSize.textContent = `Tamanho: ${(file.size / 1024).toFixed(2)} KB`;
+            fileInfo.classList.add('show');
+            convertBtn.disabled = false;
+            result.classList.remove('show');
+        }
+
+        convertBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            convertBtn.disabled = true;
+            progress.classList.add('show');
+            result.classList.remove('show', 'error', 'success');
+
+            try {
+                const arrayBuffer = await selectedFile.arrayBuffer();
+                const pdfData = await pdfjsLib.getDocument(arrayBuffer).promise;
+                
+                let textoCompleto = '';
+                
+                // Extrair texto de cada página
+                for (let i = 1; i <= pdfData.numPages; i++) {
+                    const page = await pdfData.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    textoCompleto += pageText + '\n';
+                }
+
+                // Criar estrutura XML
+                const xmlContent = criarXML(selectedFile.name, selectedFile.size, textoCompleto, pdfData.numPages);
+
+                progress.classList.remove('show');
+                result.classList.add('show', 'success');
+                resultTitle.textContent = '✅ Conversão realizada com sucesso!';
+                resultContent.textContent = xmlContent;
+
+                // Download button
+                downloadBtn.href = 'data:text/xml;charset=utf-8,' + encodeURIComponent(xmlContent);
+                downloadBtn.download = selectedFile.name.replace('.pdf', '.xml');
+                downloadBtn.style.display = 'inline-block';
+
+            } catch (error) {
+                progress.classList.remove('show');
+                result.classList.add('show', 'error');
+                resultTitle.textContent = '❌ Erro na conversão';
+                resultContent.textContent = `Erro: ${error.message}`;
+                downloadBtn.style.display = 'none';
+            } finally {
+                convertBtn.disabled = false;
+            }
+        });
+
+        function criarXML(nomePDF, tamanho, texto, numPaginas) {
+            const dataAtual = new Date().toISOString();
+            
+            // Função para escapar caracteres especiais XML
+            const escaparXML = (str) => {
+                if (!str) return '';
+                return str.replace(/[<>&'"]/g, (char) => {
+                    const chars = {
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '&': '&amp;',
+                        "'": '&apos;',
+                        '"': '&quot;'
+                    };
+                    return chars[char];
+                });
+            };
+
+            const textoLimpo = escaparXML(texto.trim());
+
+            return `<?xml version="1.0" encoding="UTF-8"?>
+<documento>
+    <metadados>
+        <nome_arquivo>${escaparXML(nomePDF)}</nome_arquivo>
+        <tamanho_bytes>${tamanho}</tamanho_bytes>
+        <tamanho_kb>${(tamanho / 1024).toFixed(2)}</tamanho_kb>
+        <data_conversao>${dataAtual}</data_conversao>
+        <total_paginas>${numPaginas}</total_paginas>
+        <tipo_origem>application/pdf</tipo_origem>
+        <tipo_destino>text/xml</tipo_destino>
+    </metadados>
+    <conteudo>
+        <texto>
+${textoLimpo}
+        </texto>
+    </conteudo>
+</documento>`;
+        }
+
+        clearBtn.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.remove('show');
+            result.classList.remove('show');
+            convertBtn.disabled = true;
+            progress.classList.remove('show');
+        });
+    </script>
+</body>
+</html>
