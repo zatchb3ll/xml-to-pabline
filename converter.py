@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import PyPDF2
 from datetime import datetime
@@ -42,16 +40,14 @@ def escapar_xml(texto):
 
 def criar_xml(caminho_pdf, texto, num_paginas):
     """Cria um documento XML a partir dos dados do PDF"""
-    
-    # Informações do arquivo
+ 
     tamanho_bytes = os.path.getsize(caminho_pdf)
     nome_arquivo = os.path.basename(caminho_pdf)
     data_conversao = datetime.now().isoformat()
     
-    # Criar estrutura XML
     root = ET.Element("documento")
     
-    # Metadados
+
     metadados = ET.SubElement(root, "metadados")
     
     ET.SubElement(metadados, "nome_arquivo").text = nome_arquivo
@@ -62,15 +58,12 @@ def criar_xml(caminho_pdf, texto, num_paginas):
     ET.SubElement(metadados, "tipo_origem").text = "application/pdf"
     ET.SubElement(metadados, "tipo_destino").text = "text/xml"
     
-    # Conteúdo
     conteudo = ET.SubElement(root, "conteudo")
     texto_element = ET.SubElement(conteudo, "texto")
     texto_element.text = escapar_xml(texto)
-    
-    # Formatar XML com indentação
+
     xml_str = minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
     
-    # Remover linhas vazias
     xml_str = "\n".join([linha for linha in xml_str.split("\n") if linha.strip()])
     
     return xml_str
@@ -81,16 +74,13 @@ def converter_pdf_para_xml(caminho_pdf, caminho_saida=None):
     print(f"📄 Processando: {caminho_pdf}")
     print("⏳ Extraindo texto...")
     
-    # Extrair texto
     texto, num_paginas = extrair_texto_pdf(caminho_pdf)
     
     print(f"✅ Texto extraído ({num_paginas} páginas)")
     print("🔄 Criando XML...")
     
-    # Criar XML
     xml_content = criar_xml(caminho_pdf, texto, num_paginas)
     
-    # Salvar arquivo
     if caminho_saida is None:
         caminho_saida = caminho_pdf.replace(".pdf", ".xml")
     
@@ -121,3 +111,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"❌ Erro: {e}")
         sys.exit(1)
+
