@@ -8,7 +8,6 @@ const js2xmlparser = require('js2xmlparser');
 const app = express();
 const PORT = 3000;
 
-// Configurar multer para upload
 const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
@@ -22,20 +21,15 @@ const upload = multer({
     }
 });
 
-// Servir arquivos estáticos
 app.use(express.static(__dirname));
 
-// Rota para conversão PDF to XML
 app.post('/api/convert', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'Nenhum arquivo foi enviado' });
         }
-
-        // Parse PDF
         const pdfData = await pdfParse(req.file.buffer);
 
-        // Estruturar dados para XML
         const xmlData = {
             '@': {
                 xmlns: 'http://www.example.com/pdf-to-xml',
@@ -53,7 +47,6 @@ app.post('/api/convert', upload.single('file'), async (req, res) => {
             }
         };
 
-        // Se houver informações adicionais do PDF
         if (pdfData.info) {
             xmlData.metadata.pdfInfo = {
                 title: pdfData.info.Title || 'N/A',
@@ -64,7 +57,6 @@ app.post('/api/convert', upload.single('file'), async (req, res) => {
             };
         }
 
-        // Converter para XML
         const xmlString = js2xmlparser.parse('document', xmlData, {
             declaration: {
                 include: true,
@@ -87,10 +79,9 @@ app.post('/api/convert', upload.single('file'), async (req, res) => {
         });
     }
 });
-
-// Função para limpar e estruturar texto
+texto
 function sanitizeText(text) {
-    // Remove espaços em branco excessivos
+
     return text
         .trim()
         .replace(/\n\n+/g, '\n')
@@ -98,21 +89,19 @@ function sanitizeText(text) {
         .trim();
 }
 
-// Rota para verificar se o servidor está rodando
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Iniciar servidor
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
     console.log('Pronto para receber arquivos PDF');
 });
 
-// Tratamento de erros
 app.use((err, req, res, next) => {
     console.error(err);
     res.status(500).json({
         error: 'Erro no servidor: ' + err.message
     });
 });
+
