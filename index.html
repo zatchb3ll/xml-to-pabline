@@ -331,7 +331,7 @@
     </div>
 
     <script>
-        // Configurar PDF.js
+    
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         const uploadArea = document.getElementById('uploadArea');
@@ -349,18 +349,15 @@
 
         let selectedFile = null;
 
-        // Upload área click
         uploadArea.addEventListener('click', () => fileInput.click());
 
-        // File input change
+    
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 handleFile(file);
             }
         });
-
-        // Drag and drop
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.classList.add('dragover');
@@ -413,23 +410,19 @@
                 
                 let textoCompleto = '';
                 
-                // Extrair texto de cada página
+        
                 for (let i = 1; i <= pdfData.numPages; i++) {
                     const page = await pdfData.getPage(i);
                     const textContent = await page.getTextContent();
                     const pageText = textContent.items.map(item => item.str).join(' ');
                     textoCompleto += pageText + '\n';
                 }
-
-                // Criar estrutura XML
                 const xmlContent = criarXML(selectedFile.name, selectedFile.size, textoCompleto, pdfData.numPages);
 
                 progress.classList.remove('show');
                 result.classList.add('show', 'success');
                 resultTitle.textContent = '✅ Conversão realizada com sucesso!';
                 resultContent.textContent = xmlContent;
-
-                // Download button
                 downloadBtn.href = 'data:text/xml;charset=utf-8,' + encodeURIComponent(xmlContent);
                 downloadBtn.download = selectedFile.name.replace('.pdf', '.xml');
                 downloadBtn.style.display = 'inline-block';
@@ -447,8 +440,7 @@
 
         function criarXML(nomePDF, tamanho, texto, numPaginas) {
             const dataAtual = new Date().toISOString();
-            
-            // Função para escapar caracteres especiais XML
+
             const escaparXML = (str) => {
                 if (!str) return '';
                 return str.replace(/[<>&'"]/g, (char) => {
@@ -495,3 +487,4 @@ ${textoLimpo}
     </script>
 </body>
 </html>
+
